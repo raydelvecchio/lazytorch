@@ -1,5 +1,5 @@
 # LazyTorch!
-A sequentially implemented, fully ready-to-train deep learning framework, all in *raw* python, with no external imports. Custom autodiff implementation, Tensor abstraction, feed-forward neural network, loss functions, activations, and more! Inspired by PyTorch. Lazy cause we don't do anything in parallel. Mainly made for my own (and now others'), learning! 
+A sequentially implemented, fully ready-to-train deep learning framework, all in *raw* python, with no external imports. autodiff implementation, Tensor abstraction, feed-forward neural network, loss functions, activations, and more! Inspired by PyTorch and Karpathy's Micrograd. Lazy cause we don't do anything in parallel. Mainly made for my own (and now others'), learning! 
 
 # The `Value` Class
 * Main building block for autodiff
