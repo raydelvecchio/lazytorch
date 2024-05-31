@@ -160,3 +160,4 @@ This repo is a fully working deep learning framework you can use to train your m
 # TODO / Improvements
 * Actually implement a no_grad feature so we can cut down on code complexity and avoid unnecesary operations
 * Optimize MSE loss, potentially implement an element-wise Value addition / subtraction / multiplication / division instead of just scalar element-wise ops
+* Actually implement batch size functionality that isn't just = 1 lmfao
