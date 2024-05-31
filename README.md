@@ -7,9 +7,9 @@ A sequentially implemented, fully ready-to-train deep learning framework, all in
     * No other operations right now for simplicity, although any other operation can be constructed from these pretty much!
 * All internal values are floats, no support for complex numbers
 * Automatically accounts for mathematical operations with a scalar instead of another Value object
-* All gradients automatically calculated upon operation (no `requires_grad` type toggle for simplicity)
+* All gradients automatically calculated upon operation (no `requires_grad` or `no_grad` type toggle for simplicity)
 * Calculated gradients are stored in each `Value` directly; must access `Value.gradient` to see them
-* Like PyTorch, we cannot automatically zero out gradients and must use the `zero()` function to do so
+* Like PyTorch, we cannot automatically zero out gradients and must use the `zero()` function to do so; this also resets the computation graph so we're ready for more computations to be tracked properly over time
 * Multi-line operations are totally fine in line with the chain rule, however, changing of previous values will break the calculation graph
 
     * ```python
@@ -18,7 +18,7 @@ A sequentially implemented, fully ready-to-train deep learning framework, all in
         b = Value(3.0)
         f = b + b * a
         z = f * b
-        z.backward()
+        z.backprop()
         ```
 
     * ```python
@@ -27,7 +27,7 @@ A sequentially implemented, fully ready-to-train deep learning framework, all in
         b = Value(3.0)
         f = b + b * a
         b = b * a
-        f.backward()
+        f.backprop()
         ```
 
 ### Gradient Calculation Code Flow
@@ -37,11 +37,11 @@ We'll use addition as an example here for simplicity.
 3. Two `Value` objects A and B are added together. 
 4. The resulting value of a forward pass (calculation of addition) is returned as another `Value` object C.
 5. The backward function for addition is set as the `_backprop` value on the output C. This backward function is where we define how to calculate gradients of the `Value` A as well as the `Value` B for addition (if we were not doing addition, it'd be for the other operation). The backward function also applies the gradient updates to both `Value` A and B. We must update the gradients of both to track the operation so they can flow through the chain rule during backpropagation.
-6. The `_dependents` set of the output C is updated to be the `Value` A as well as the `Value` B. This is because both `Value` objects are responsible for calculating each other's gradient. This step builds the computation graph so we can track where each output came from, with the operations themselves as the nodes and the `Value`s as the edges pretty much.
-7. We decide we want to find the gradients, so we call `.backward()` on the final output `Value` C. 
+6. The `_dependents` set of the output C is updated to be the `Value` A as well as the `Value` B. This is because both `Value` objects are responsible for calculating each other's gradient. This step builds the computation graph so we can track where each output came from, with the operations themselves as the nodes and the `Value`s as the edges pretty much. During backprop, A and B "depend" on C to receive gradients from upstream.
+7. We decide we want to find the gradients, so we call `.backprop()` on the final output `Value` C. 
 8. Starting with `Value` C, we use depth-first search to construct a list, from first operation -> last operation, of `Value` objects. This list represents all `Value` objects in the order they were used to perform the calculations that result in C, in this case, addition.
 9. We set the gradient of C to be = 1. This must occur before backprop calculation, since we use this gradient in it. We are calculating all gradients with respect to the final output, which in this case is C, so this makes sense. In a deep learning scenario, this final output is typically the loss obtained from forward prop!
-10. We reverse the depth-first list of `Value` objects, so it is now from last operated `Value` -> first operated `Value`. Iterating through this list, we call each `_backprop` function in each `Value`, which was set in step 5. Again, this represents the gradient calculation / setting of each gradient for the last operation occurring on the `Value`. This step is equivalent to calculating the chain rule.
+10. We reverse the depth-first list of `Value` objects, so it is now from last operated `Value` -> first operated `Value`. Iterating through this list, we call each `_backprop` function in each `Value`, which was set in step 5. Again, this represents the gradient calculation / setting of each gradient for the last operation occurring on the `Value`. ***This step is equivalent to calculating the chain rule.***
 11. To access the gradients of A, B, and C, all with respect to C, you will access `[A | B | C].gradient` to see it!
 
 ### Example Usage and Gradient Calculation:
@@ -49,7 +49,7 @@ We'll use addition as an example here for simplicity.
 a = Value(2.0)
 b = Value(3.0)
 f = b + b * a
-f.backward()
+f.backprop()
 print(f'Gradient of a: {a.gradient}')
 print(f'Gradient of b: {b.gradient}')
 print(f'Gradient of f: {f.gradient}')
@@ -106,15 +106,20 @@ $$ \frac{\partial f}{\partial f} = 1 $$
 
 # The `Tensor` class
 * Abstraction on top of the `Value` class
-* Currently supports 2D matrices (so can do dense layers now)!!
+* Each entry in a `Tensor` is itself a `Value`
+    * This means, when we perform tensor operations, each invidual `Value` tracks its own gradients!
+* Currently supports 2D matrices
     * Can support single values as a `Tensor` via `Tensor([[0]])`: this represents a tensor with a single value 0 contained in it
 * Add and Subtract methods for both `Tensor` -> `Tensor` and `Tensor` -> scalar
 * Division method for `Tensor` / scalar element-wise division
 * Multiplication method for both matrix multiplication and element-wise multiplication, automatically detected
 * Everything has autograd, with the gradients for all downstream `Tensor`s calculated with the `.backprop()` method
-* Can get a matrix of equivalent size of a Tensor's gradients after some computation with the `.gradient()` function (useful for gradient updates)
+* Can get a `Tensor` of equivalent size of a `Tensor`'s gradients after some computation with the `.gradient()` function (useful for gradient updates)
 * `.zero()` method will zero out all the gradients of a given Tensor
 * Lack of `no_grad` functionality means if you're training a model, you must call the build-int `.zero()` method many times per gradient update to avoid many unnecessary accumulations
+
+# Testing and Playing
+You can play around and test different functionalities of both the `Value` and `Tensor` classes in the `/test` folder.
 
 # `/examples/nn.py`: A ***fully trained*** neural network with LazyTorch!
 * In `nn.py`, I trained a neural network that can approximate any polynomial function, using the code in this repo
