@@ -1,11 +1,12 @@
-# Simple Autograd
-Custom autogradient implementation. Written in Raw python, no external imports.
+# LazyTorch!
+Custom autodiff/autograd implementation, Tensor object abstraction, and feed-forward neural network, ready for training! Loosely in the style of PyTorch. Mainly made for my own (and now others'), learning! 
 
 # The `Value` Class
 * Main building block for this autograd repo; smallest unit available
 * Supports `add`, `subtract`, `multiply`, and `divide` operations
     * No other operations right now for simplicity
 * All internal values are floats, no support for complex numbers
+* Automatically accounts for mathematical operations with a scalar instead of another Value object
 * All gradients automatically calculated upon operation (no `requires_grad` type toggle for simplicity)
 * Calculated gradients are stored in each `Value` directly; must access `Value.gradient` to see them
 * Like PyTorch, we cannot automatically zero out gradients and must use the `zero()` function to do so
@@ -32,11 +33,11 @@ Custom autogradient implementation. Written in Raw python, no external imports.
 ### Gradient Calculation Code Flow
 We'll use addition as an example here for simplicity.
 1. `Value` class instances are created with numerical values assigned to them. 
-2. Upon instantiation we initialized the value itself, the gradient, a set `_prev`, which will track the gradients used to calculate `self`'s gradient, and a function `_backward`, which will be used to store the last gradient calculation function for a given operation. 
+2. Upon instantiation we initialized the value itself, the gradient, a set `_dependents`, which will track the gradients used to calculate `self`'s gradient, and a function `_backprop`, which will be used to store the last gradient calculation function for a given operation. 
 3. Two `Value` objects A and B are added together. 
 4. The resulting value of a forward pass (calculation of addition) is returned as another `Value` object C.
-5. The backward function for addition is set as the `_backward` value on the output C. This backward function is where we define how to calculate gradients of the `Value` A as well as the `Value` B for addition (if we were not doing addition, it'd be for the other operation). The backward function also applies the gradient updates to both `Value` A and B. We must update the gradients of both to track the operation so they can flow through the chain rule during backpropagation.
-6. The `_prev` set of the output C is updated to be the `Value` A as well as the `Value` B. This is because both `Value` objects are responsible for calculating each other's gradient. This step builds the computation graph so we can track where each output came from. 
+5. The backward function for addition is set as the `_backprop` value on the output C. This backward function is where we define how to calculate gradients of the `Value` A as well as the `Value` B for addition (if we were not doing addition, it'd be for the other operation). The backward function also applies the gradient updates to both `Value` A and B. We must update the gradients of both to track the operation so they can flow through the chain rule during backpropagation.
+6. The `_dependents` set of the output C is updated to be the `Value` A as well as the `Value` B. This is because both `Value` objects are responsible for calculating each other's gradient. This step builds the computation graph so we can track where each output came from, with the operations themselves as the nodes and the `Value`s as the edges pretty much.
 7. We decide we want to find the gradients, so we call `.backward()` on the final output `Value` C. 
 8. Starting with `Value` C, we use depth-first search to construct a list, from first operation -> last operation, of `Value` objects. This list represents all `Value` objects in the order they were used to perform the calculations that result in C, in this case, addition.
 9. We set the gradient of C to be = 1. This must occur before backprop calculation, since we use this gradient in it. We are calculating all gradients with respect to the final output, which in this case is C, so this makes sense. In a deep learning scenario, this final output is typically the loss obtained from forward prop!
@@ -102,3 +103,36 @@ $$ \frac{\partial f}{\partial f} = 1 $$
 - The gradient of f with respect to a is 3.0.
 - The gradient of f with respect to b is 3.0.
 - The gradient of f with respect to itself is 1.
+
+# The `Tensor` class
+* Abstraction on top of the `Value` class
+* Currently supports 2D matrices (so can do dense layers now)!!
+    * Can support single values as a `Tensor` via `Tensor([[0]])`: this represents a tensor with a single value 0 contained in it
+* Add and Subtract methods for both `Tensor` -> `Tensor` and `Tensor` -> scalar
+* Division method for `Tensor` / scalar element-wise division
+* Multiplication method for both matrix multiplication and element-wise multiplication, automatically detected
+* Everything has autograd, with the gradients for all downstream `Tensor`s calculated with the `.backprop()` method
+* Can get a matrix of equivalent size of a Tensor's gradients after some computation with the `.gradient()` function (useful for gradient updates)
+* `.zero()` method will zero out all the gradients of a given Tensor
+* Lack of `no_grad` functionality means if you're training a model, you must call the build-int `.zero()` method many times per gradient update to avoid many unnecessary accumulations
+
+# `/examples/nn.py`: A ***fully trained*** neural network with LazyTorch!
+* In `nn.py`, I trained a neural network that can approximate any polynomial function, using the code in this repo
+    * For simplicity, I trained this to learn `x**2`
+* Created LazyTorch-friendly ReLU and MSE Loss functions for activation and loss calculation
+* Created an abstraction for a Dense Layer, complete with weights and biases
+* Defined an entire neural network class, complete with gradient updates, forward prop, backprop, automatic dataset creation (since we're only approximating functions here), input shuffling, numerous epochs during training, .pkl-based checkpointing, and more
+* Batching is not implemented yet, so the current setup treats the network as if `batch_size=1`; we can change this later
+* In `nn_eval.py`, you can plot the learned function against the real function to see the results, and plot the loss over time as it decays
+* NOTE: it is incredibly slow, since all matrix operations are calculated sequentially in the `Tensor` class; no parallelization is used here at all haha
+
+### Graphs and Training
+Here are some graphs showing LazyTorch learning `x**2`. You can see all the code I trained this with in `examples/nn.py`. Batch size is 1, hidden dim of 32, 1 input layer, 2 hidden layers, and 1 output layer (all dense), 0.0001 learning rate, 20 epochs, and learning between x = -10 and x = 10. The whole model took 1,320 seconds to train in total on my M2 Mac (not that hardware matters much, it's all sequential anyway). 
+
+![Training Loss Over Time](examples/graphs/training_loss.png)
+
+Training loss over time. Each "iteration" can be thought of as a batch with batch_size=1. Continues to decrease!
+
+![Function Learning Gif](examples/graphs/comparison_graphs.gif)
+
+Timelapse of each epoch snapshot approximation of `x**2`. You can see how it learns over time!
