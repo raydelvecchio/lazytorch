@@ -18,7 +18,7 @@ def MSE_Loss(predicted: Tensor, target: Tensor) -> Value:
     """
     assert predicted.shape == target.shape, "Shapes of predicted and target must match"
     
-    squared_diff = (predicted - target) * (predicted - target)  # calculate the squared difference in an autograd-friendly manner
+    squared_diff = (predicted - target) * (predicted - target)  # calculate the squared difference in an autodiff-friendly manner
     mse_loss = squared_diff.sum() / (predicted.shape[0] * predicted.shape[1])
     
     return mse_loss

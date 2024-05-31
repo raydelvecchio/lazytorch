@@ -1,8 +1,8 @@
 # LazyTorch!
-A sequentially implemented, fully ready-to-train deep learning framework, all in *raw* python, with no external imports. Custom autodiff/autograd implementation, Tensor abstraction, feed-forward neural network, loss functions, activations, and more! Inspired by PyTorch. Lazy cause we don't do anything in parallel. Mainly made for my own (and now others'), learning! 
+A sequentially implemented, fully ready-to-train deep learning framework, all in *raw* python, with no external imports. Custom autodiff implementation, Tensor abstraction, feed-forward neural network, loss functions, activations, and more! Inspired by PyTorch. Lazy cause we don't do anything in parallel. Mainly made for my own (and now others'), learning! 
 
 # The `Value` Class
-* Main building block for autodiff/autograd
+* Main building block for autodiff
 * Supports `add`, `subtract`, `multiply`, and `divide` operations
     * No other operations right now for simplicity, although any other operation can be constructed from these pretty much!
 * All internal values are floats, no support for complex numbers
@@ -113,7 +113,7 @@ $$ \frac{\partial f}{\partial f} = 1 $$
 * Add and Subtract methods for both `Tensor` -> `Tensor` and `Tensor` -> scalar
 * Division method for `Tensor` / scalar element-wise division
 * Multiplication method for both matrix multiplication and element-wise multiplication, automatically detected
-* Everything has autograd, with the gradients for all downstream `Tensor`s calculated with the `.backprop()` method
+* Everything has autodiff, with the gradients for all downstream `Tensor`s calculated with the `.backprop()` method
 * Can get a `Tensor` of equivalent size of a `Tensor`'s gradients after some computation with the `.gradient()` function (useful for gradient updates)
 * `.zero()` method will zero out all the gradients of a given Tensor
 * Lack of `no_grad` functionality means if you're training a model, you must call the build-int `.zero()` method many times per gradient update to avoid many unnecessary accumulations
