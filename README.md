@@ -1,7 +1,17 @@
 # LazyTorch!
 A sequentially implemented, fully ready-to-train deep learning framework, all in *raw* python, with no external imports. autodiff implementation, Tensor abstraction, feed-forward neural network, loss functions, activations, and more! Inspired by [PyTorch](https://github.com/pytorch/pytorch) and [Karpathy's Micrograd](https://github.com/karpathy/micrograd). Lazy cause we don't do anything in parallel. Mainly made for my own (and now others'), learning! 
 
+# Details
+* All code can be found in `/lazytorch`!
+* Implemented for ease of use: you never have to define any custom backprop logic for writing new layers, loss functions, activations, or anything else!
+    * Since we calculate gradients directly within each mathematical operation of a Tensor, you can perform complex calculations without worrying about deriving their backprop
+    * Everything is function-first: you can see implementations of activation and loss functions in `/lazytorch/activations` and `/lazytorch/losses`
+* Supports autodiff for addition, multiplication, subtraction, and division, for both scalars, `Value` objects, and `Tensor` objects
+* Pre-built Dense layer, so you can train your own networks starting now!
+* Abstractions for `Layer` and `Network`, allowing you to build complex networks with minimal overhead, just like PyTorch
+
 # The `Value` Class
+* Based on the Micrograd implementation by Karpathy, with enhancements for scalars, naming clarity (for me at least), other math operations, and graph building upon each direct operation
 * Main building block for autodiff
 * Supports `add`, `subtract`, `multiply`, and `divide` operations
     * No other operations right now for simplicity, although any other operation can be constructed from these pretty much!
