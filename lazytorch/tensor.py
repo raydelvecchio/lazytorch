@@ -75,7 +75,7 @@ class Tensor:
 
     def gradient(self):
         """
-        Returns the gradients of this Tensor as its own Tensor! This is the Jacobian Matrix of this Tensor.
+        Returns the gradients of this Tensor as its own Tensor!
         """
         result = [[Value(x.gradient) for x in row] for row in self.data]
         return Tensor(result)

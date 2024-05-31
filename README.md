@@ -1,11 +1,13 @@
 # LazyTorch!
-A sequentially implemented, fully ready-to-train deep learning framework, all in *raw* python, with no external imports. autodiff implementation, Tensor abstraction, feed-forward neural network, loss functions, activations, and more! Inspired by PyTorch and Karpathy's Micrograd. Lazy cause we don't do anything in parallel. Mainly made for my own (and now others'), learning! 
+A sequentially implemented, fully ready-to-train deep learning framework, all in *raw* python, with no external imports. autodiff implementation, Tensor abstraction, feed-forward neural network, loss functions, activations, and more! Inspired by [PyTorch](https://github.com/pytorch/pytorch) and [Karpathy's Micrograd](https://github.com/karpathy/micrograd). Lazy cause we don't do anything in parallel. Mainly made for my own (and now others'), learning! 
 
 # The `Value` Class
 * Main building block for autodiff
 * Supports `add`, `subtract`, `multiply`, and `divide` operations
     * No other operations right now for simplicity, although any other operation can be constructed from these pretty much!
 * All internal values are floats, no support for complex numbers
+* Supports autodiff even when you're operating between a `Value` and a scalar!
+    * See tests for more details here
 * Automatically accounts for mathematical operations with a scalar instead of another Value object
 * All gradients automatically calculated upon operation (no `requires_grad` or `no_grad` type toggle for simplicity)
 * Calculated gradients are stored in each `Value` directly; must access `Value.gradient` to see them
@@ -144,3 +146,7 @@ Timelapse of each epoch snapshot approximation of `x**2`. You can see how it lea
 
 # Conclusion
 This repo is a fully working deep learning framework you can use to train your models without having to manually derive backprop for each layer. It's giga slow. But technically, you could train GPT-5 on this if you had enough time and patience. 
+
+# TODO / Improvements
+* Actually implement a no_grad feature so we can cut down on code complexity and avoid unnecesary operations
+* Optimize MSE loss, potentially implement an element-wise Value addition / subtraction / multiplication / division instead of just scalar element-wise ops
