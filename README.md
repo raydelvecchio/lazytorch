@@ -2,9 +2,9 @@
 Custom autodiff/autograd implementation, Tensor object abstraction, and feed-forward neural network, ready for training! Loosely in the style of PyTorch. Mainly made for my own (and now others'), learning! 
 
 # The `Value` Class
-* Main building block for this autograd repo; smallest unit available
+* Main building block for autodiff/autograd
 * Supports `add`, `subtract`, `multiply`, and `divide` operations
-    * No other operations right now for simplicity
+    * No other operations right now for simplicity, although any other operation can be constructed from these pretty much!
 * All internal values are floats, no support for complex numbers
 * Automatically accounts for mathematical operations with a scalar instead of another Value object
 * All gradients automatically calculated upon operation (no `requires_grad` type toggle for simplicity)
@@ -136,3 +136,6 @@ Training loss over time. Each "iteration" can be thought of as a batch with batc
 ![Function Learning Gif](examples/graphs/comparison_graphs.gif)
 
 Timelapse of each epoch snapshot approximation of `x**2`. You can see how it learns over time!
+
+# Conclusion
+This repo is a fully working deep learning framework you can use to train your models without having to manually derive backprop for each layer. It's giga slow. But technically, you could train GPT-5 on this if you had enough time and patience. 
